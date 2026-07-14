@@ -1,0 +1,6 @@
+{
+  "name": "HTTP Request Proxy",
+  "description": "An unblocked media portal featuring a Cineby-inspired Movie & TV show cinema library, high-speed YouTube stream gateways, and secure proxy tools to bypass classroom and network filters.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
