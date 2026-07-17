@@ -230,6 +230,84 @@ export default function App() {
   ];
   const [currentQuoteIndex, setCurrentQuoteIndex] = useState(0);
 
+  // Stealth cloak mode state
+  const [cloakMask, setCloakMask] = useState<"docs" | "classroom" | "canvas" | "drive" | "off">(() => {
+    if (typeof window !== "undefined") {
+      const host = window.location.hostname.toLowerCase();
+      if (host.includes("github") || host.includes("vercel") || host.includes("git")) {
+        return "docs";
+      }
+    }
+    return "off";
+  });
+
+  const cloakMode = cloakMask !== "off";
+
+  const getLabel = (key: string) => {
+    if (cloakMode) {
+      switch (key) {
+        case "brand_name": return "Maple Workspace";
+        case "brand_badge": return "educational system";
+        case "launch_button": return "Access Resource";
+        case "search_placeholder": return "Access educational resource address or study link... (e.g. scratch.mit.edu)";
+        case "footer_text": return "Secure document gateway is active. Search and explore educational content freely.";
+        case "bypass_active": return "Environment: Secure SSL Sync";
+        case "unblocked_games": return "Interactive Learning Modules";
+        case "unblocked_youtube_client": return "Educational Media Sync Container";
+        case "games_description": return "Interactive physics, rhythm, and logic learning blocks running compiled engines.";
+        case "tv_description": return "Stream high-definition tutorial, documentation, and lofi focus audio videos instantly.";
+        case "unblocker_warning": return "Maple Portal provides access to interactive resources and documents for research.";
+        default: return key;
+      }
+    } else {
+      switch (key) {
+        case "brand_name": return "Maple Unblocc";
+        case "brand_badge": return "unblocker";
+        case "launch_button": return "Launch Proxy";
+        case "search_placeholder": return "Unblock search or enter URL... (e.g. scratch.mit.edu, crazygames.com)";
+        case "footer_text": return "Lightspeed school filter blocks can't touch us. Enter any address in the search bar below to surf freely.";
+        case "bypass_active": return "Bypass: Active";
+        case "unblocked_games": return "unblocked games";
+        case "unblocked_youtube_client": return "unblocked youtube client";
+        case "games_description": return "Play popular Scratch games like Paper Minecraft and Scratcharia at ultra-smooth 60 FPS. 100% working, unblocked console.";
+        case "tv_description": return "Watch trending videos, search, and listen to music with high-speed unblocked media players and instant mirror servers.";
+        case "unblocker_warning": return "Lightspeed school filter blocks can't touch us. Enter any address in the search bar below to surf freely.";
+        default: return key;
+      }
+    }
+  };
+
+  useEffect(() => {
+    if (typeof document !== "undefined") {
+      let titleVal = "Maple Unblocc";
+      let iconVal = "/favicon.ico";
+
+      if (cloakMask === "docs") {
+        titleVal = "Google Docs";
+        iconVal = "https://ssl.gstatic.com/docs/documents/images/kix-favicon7.ico";
+      } else if (cloakMask === "classroom") {
+        titleVal = "Google Classroom";
+        iconVal = "https://ssl.gstatic.com/classroom/favicon.png";
+      } else if (cloakMask === "canvas") {
+        titleVal = "Dashboard";
+        iconVal = "https://du11hjcvx0uqb.cloudfront.net/dist/images/favicon-e05d51a6d3.ico";
+      } else if (cloakMask === "drive") {
+        titleVal = "My Drive - Google Drive";
+        iconVal = "https://ssl.gstatic.com/images/branding/product/1x/drive_2020q4_32dp.png";
+      }
+
+      document.title = titleVal;
+
+      let link = document.querySelector("link[rel~='icon']") as HTMLLinkElement;
+      if (!link) {
+        link = document.createElement('link');
+        link.rel = 'icon';
+        document.getElementsByTagName('head')[0].appendChild(link);
+      }
+      link.href = iconVal;
+    }
+  }, [cloakMask]);
+
   // Setup Clock and Battery
   useEffect(() => {
     // Clock tick
@@ -389,10 +467,10 @@ export default function App() {
               {/* Little maple leaf accent */}
               <span className="text-xl">🍁</span>
               <span className="text-base font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-[#FF7E47] via-[#FFB347] to-[#D4A373]">
-                Maple Unblocc
+                {getLabel("brand_name")}
               </span>
-              <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#A63A13]/20 text-[#FF9E79] font-mono border border-[#A63A13]/40">
-                unblocker
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#A63A13]/20 text-[#FF9E79] font-mono border border-[#A63A13]/40 animate-pulse">
+                {getLabel("brand_badge")}
               </span>
             </div>
 
@@ -474,6 +552,23 @@ export default function App() {
           {/* Right: Computer time & Battery status */}
           <div className="flex items-center space-x-3 text-xs font-mono">
             
+            {/* Stealth Cloak Mode Dropdown */}
+            <div className="relative flex items-center">
+              <span className="text-[10px] text-[#D4A373]/80 mr-1.5 hidden md:inline">Cloak Mask:</span>
+              <select
+                value={cloakMask}
+                onChange={(e) => setCloakMask(e.target.value as any)}
+                className="bg-[#160A05] text-[#FFE8D6] border border-[#3D1A0E] rounded px-2 py-1 text-[11px] font-semibold focus:outline-none focus:border-[#FF7E47] transition cursor-pointer select-none"
+                title="Switches tab icon & title instantly to hide from school filters (Lightspeed) or teachers."
+              >
+                <option value="off">🕶️ Off / Uncloaked</option>
+                <option value="docs">📄 Google Docs</option>
+                <option value="classroom">🏫 Google Classroom</option>
+                <option value="canvas">🎨 Canvas LMS</option>
+                <option value="drive">💾 Google Drive</option>
+              </select>
+            </div>
+
             {/* Battery Indicator */}
             <div className="flex items-center space-x-1.5 bg-[#160A05] px-2 py-1 rounded border border-[#3D1A0E]" title={isCharging ? "Charging" : "Discharging"}>
               {isCharging ? (
@@ -516,7 +611,7 @@ export default function App() {
               {/* Small instructions / help widget */}
               <div className="w-full flex justify-end">
                 <span className="text-[11px] font-mono bg-[#1B0C06]/80 text-[#D4A373] px-3 py-1 rounded-full border border-[#3D1A0E] flex items-center gap-1.5">
-                  <Shield className="h-3 w-3 text-[#FF7E47]" /> Bypass: Active
+                  <Shield className="h-3 w-3 text-[#FF7E47]" /> {getLabel("bypass_active")}
                 </span>
               </div>
 
@@ -560,9 +655,9 @@ export default function App() {
                   </div>
                 </motion.div>
 
-                {/* Name: Maple Unblocc (Intentional Misspelling) */}
+                {/* Name: Maple Unblocc (Intentional Misspelling) or Cloaked */}
                 <h1 className="text-5xl font-extrabold tracking-tight text-white mb-2">
-                  Maple <span className="bg-gradient-to-r from-[#FF7E47] via-[#FFB347] to-[#D4A373] bg-clip-text text-transparent">Unblocc</span>
+                  Maple <span className="bg-gradient-to-r from-[#FF7E47] via-[#FFB347] to-[#D4A373] bg-clip-text text-transparent">{cloakMode ? "Workspace" : "Unblocc"}</span>
                 </h1>
                 
                 {/* Dynamic cycling quotes at the center where the misspelled warning was */}
@@ -609,7 +704,7 @@ export default function App() {
                     const id = Math.random().toString(36).substring(2, 9);
                     setTabs([...tabs, {
                       id,
-                      title: "Maple Games 🎮",
+                      title: cloakMode ? "Workspace Module" : "Maple Games 🎮",
                       url: "maple-games",
                       proxyUrl: "",
                       type: "games"
@@ -626,12 +721,14 @@ export default function App() {
                       <Gamepad2 className="h-5 w-5" />
                     </div>
                     <div>
-                      <h3 className="font-bold text-white group-hover:text-[#FFB347] transition">Maple Games</h3>
-                      <p className="text-[10px] text-[#FF9E79] font-mono">scratch.mit.edu bypass</p>
+                      <h3 className="font-bold text-white group-hover:text-[#FFB347] transition">
+                        {cloakMode ? "Maple Modules" : "Maple Games"}
+                      </h3>
+                      <p className="text-[10px] text-[#FF9E79] font-mono">{cloakMode ? "interactive logic runner" : "scratch.mit.edu bypass"}</p>
                     </div>
                   </div>
                   <p className="text-xs text-[#D4A373]/80 leading-relaxed">
-                    Play popular Scratch games like Paper Minecraft and Scratcharia at ultra-smooth 60 FPS. 100% working, unblocked console.
+                    {getLabel("games_description")}
                   </p>
                 </motion.div>
 
@@ -643,7 +740,7 @@ export default function App() {
                     const id = Math.random().toString(36).substring(2, 9);
                     setTabs([...tabs, {
                       id,
-                      title: "Maple TV 📺",
+                      title: cloakMode ? "Media Node" : "Maple TV 📺",
                       url: "maple-tv",
                       proxyUrl: "",
                       type: "tv"
@@ -660,19 +757,21 @@ export default function App() {
                       <Tv className="h-5 w-5" />
                     </div>
                     <div>
-                      <h3 className="font-bold text-white group-hover:text-[#FFB347] transition">Maple TV</h3>
-                      <p className="text-[10px] text-[#FF9E79] font-mono">unblocked youtube client</p>
+                      <h3 className="font-bold text-white group-hover:text-[#FFB347] transition">
+                        {cloakMode ? "Maple Media" : "Maple TV"}
+                      </h3>
+                      <p className="text-[10px] text-[#FF9E79] font-mono">{cloakMode ? "educational media container" : "unblocked youtube client"}</p>
                     </div>
                   </div>
                   <p className="text-xs text-[#D4A373]/80 leading-relaxed">
-                    Watch trending videos, search, and listen to music with high-speed unblocked media players and instant mirror servers.
+                    {getLabel("tv_description")}
                   </p>
                 </motion.div>
               </div>
 
               {/* Informative info footer about Lightspeed unblocking */}
               <div className="text-center max-w-md text-[11px] text-[#D4A373]/60 bg-[#160A05]/40 border border-[#3D1A0E]/60 p-3 rounded-xl mb-2">
-                Lightspeed school filter blocks can't touch us. Enter any address in the search bar below to surf freely.
+                {getLabel("unblocker_warning")}
               </div>
 
             </motion.div>
@@ -755,6 +854,7 @@ export default function App() {
                         activeTab.url = url;
                         setTabs([...tabs]);
                       }} 
+                      cloakMode={cloakMode}
                     />
                   ) : (
                     <div className="flex-1 h-full flex items-center justify-center">
@@ -784,7 +884,7 @@ export default function App() {
         {/* Left widget: Proxy Tunnel Status */}
         <div className="hidden md:flex items-center space-x-2 text-xs text-[#D4A373]/80 font-mono">
           <span className="w-2 h-2 rounded-full bg-[#FF7E47] animate-pulse"></span>
-          <span>Tunnel: Active SSL</span>
+          <span>{cloakMode ? "Gateway Node: Secure SSL Sync" : "Tunnel: Active SSL"}</span>
         </div>
 
         {/* Center: Search / URL Launcher bar */}
@@ -798,7 +898,7 @@ export default function App() {
               
               <input
                 type="text"
-                placeholder="Unblock search or enter URL... (e.g. scratch.mit.edu, crazygames.com)"
+                placeholder={getLabel("search_placeholder")}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full bg-[#110603] border border-[#3D1A0E] focus:border-[#FF7E47]/50 text-white placeholder-[#D4A373]/40 text-xs rounded-xl pl-10 pr-28 py-2.5 focus:outline-none transition-all duration-200 font-mono shadow-inner"
@@ -808,7 +908,7 @@ export default function App() {
                 type="submit"
                 className="absolute right-1.5 bg-gradient-to-r from-[#FF7E47] to-[#A63A13] hover:from-[#FF9E79] hover:to-[#B64218] text-white font-medium text-[10px] px-4 py-1.5 rounded-lg flex items-center gap-1 transition-all duration-150 shadow-md cursor-pointer active:scale-95 border border-[#FF7E47]/20"
               >
-                Launch Proxy
+                {getLabel("launch_button")}
                 <ArrowRight className="h-3 w-3" />
               </button>
             </div>

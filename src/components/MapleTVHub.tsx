@@ -263,7 +263,7 @@ const CINEBY_ITEMS: CinebyItem[] = [
   }
 ];
 
-export default function MapleTVHub({ initialUrl, onNavigate }: { initialUrl: string; onNavigate: (url: string) => void }) {
+export default function MapleTVHub({ initialUrl, onNavigate, cloakMode }: { initialUrl: string; onNavigate: (url: string) => void; cloakMode?: boolean }) {
   const getVideoId = (url: string) => {
     const match = url.match(/video=([a-zA-Z0-9_-]{11})/);
     return match ? match[1] : null;
@@ -274,7 +274,7 @@ export default function MapleTVHub({ initialUrl, onNavigate }: { initialUrl: str
 
   const [currentSeason, setCurrentSeason] = useState<number>(1);
   const [currentEpisode, setCurrentEpisode] = useState<number>(1);
-  const [cinebyMirror, setCinebyMirror] = useState<"vidsrccc" | "vidsrcsu" | "vidsrcpm" | "vidsrcnet" | "vidsrcme" | "vidlinkpro" | "embedsu" | "vidsrcto" | "vidsrcxyz" | "vidsrcpro" | "superembed" | "lordflix" | "flixer" | "bingebox">("vidsrccc");
+  const [cinebyMirror, setCinebyMirror] = useState<"vidsrcsu" | "vidsrcpm" | "superembed">("vidsrcsu");
   const [activeMirror, setActiveMirror] = useState<"nocookie" | "piped" | "mapletv">("nocookie");
   const [useSandbox, setUseSandbox] = useState<boolean>(true);
 
@@ -404,7 +404,11 @@ export default function MapleTVHub({ initialUrl, onNavigate }: { initialUrl: str
       iframe.setAttribute("webkitallowfullscreen", "true");
       iframe.setAttribute("mozallowfullscreen", "true");
       iframe.setAttribute("scrolling", "no");
-      iframe.setAttribute("sandbox", "allow-forms allow-pointer-lock allow-popups allow-same-origin allow-scripts allow-top-navigation");
+      
+      // Conditionally apply sandbox attribute to prevent detectors from flagging iframe when Shield is OFF
+      if (useSandbox) {
+        iframe.setAttribute("sandbox", "allow-forms allow-pointer-lock allow-popups allow-same-origin allow-scripts allow-top-navigation");
+      }
 
       body.appendChild(iframe);
     } catch (err) {
@@ -539,32 +543,10 @@ export default function MapleTVHub({ initialUrl, onNavigate }: { initialUrl: str
   const getCinebyEmbedUrl = (item: CinebyItem) => {
     if (item.type === "movie") {
       switch (cinebyMirror) {
-        case "vidsrccc":
-          return `https://vidsrc.cc/v2/embed/movie/${item.id}`;
         case "vidsrcsu":
           return `https://vidsrc.su/embed/movie/${item.id}`;
         case "vidsrcpm":
           return `https://vidsrc.pm/embed/movie/${item.id}`;
-        case "vidsrcnet":
-          return `https://vidsrc.net/embed/movie/${item.id}`;
-        case "vidsrcme":
-          return `https://vidsrc.me/embed/movie?imdb=${item.id}`;
-        case "vidlinkpro":
-          return `https://vidlink.pro/movie/${item.id}?primaryColor=ea580c`;
-        case "embedsu":
-          return `https://embed.su/embed/movie/${item.id}`;
-        case "vidsrcto":
-          return `https://vidsrc.to/embed/movie/${item.id}`;
-        case "vidsrcxyz":
-          return `https://vidsrc.xyz/embed/movie?imdb=${item.id}`;
-        case "vidsrcpro":
-          return `https://vidsrc.pro/embed/movie/${item.id}`;
-        case "lordflix":
-          return `https://lordflix.su/embed/movie/${item.id}`;
-        case "flixer":
-          return `https://flixer.su/embed/movie/${item.id}`;
-        case "bingebox":
-          return `https://bingebox.to/embed/movie/${item.id}`;
         case "superembed":
         default:
           return item.id.startsWith("tt")
@@ -573,32 +555,10 @@ export default function MapleTVHub({ initialUrl, onNavigate }: { initialUrl: str
       }
     } else {
       switch (cinebyMirror) {
-        case "vidsrccc":
-          return `https://vidsrc.cc/v2/embed/tv/${item.id}/${currentSeason}/${currentEpisode}`;
         case "vidsrcsu":
           return `https://vidsrc.su/embed/tv/${item.id}/${currentSeason}/${currentEpisode}`;
         case "vidsrcpm":
           return `https://vidsrc.pm/embed/tv/${item.id}/${currentSeason}/${currentEpisode}`;
-        case "vidsrcnet":
-          return `https://vidsrc.net/embed/tv/${item.id}/${currentSeason}/${currentEpisode}`;
-        case "vidsrcme":
-          return `https://vidsrc.me/embed/tv?imdb=${item.id}&season=${currentSeason}&episode=${currentEpisode}`;
-        case "vidlinkpro":
-          return `https://vidlink.pro/tv/${item.id}/${currentSeason}/${currentEpisode}?primaryColor=ea580c`;
-        case "embedsu":
-          return `https://embed.su/embed/tv/${item.id}/${currentSeason}/${currentEpisode}`;
-        case "vidsrcto":
-          return `https://vidsrc.to/embed/tv/${item.id}/${currentSeason}/${currentEpisode}`;
-        case "vidsrcxyz":
-          return `https://vidsrc.xyz/embed/tv?imdb=${item.id}&season=${currentSeason}&episode=${currentEpisode}`;
-        case "vidsrcpro":
-          return `https://vidsrc.pro/embed/tv/${item.id}/${currentSeason}/${currentEpisode}`;
-        case "lordflix":
-          return `https://lordflix.su/embed/tv/${item.id}/${currentSeason}/${currentEpisode}`;
-        case "flixer":
-          return `https://flixer.su/embed/tv/${item.id}/${currentSeason}/${currentEpisode}`;
-        case "bingebox":
-          return `https://bingebox.to/embed/tv/${item.id}/${currentSeason}/${currentEpisode}`;
         case "superembed":
         default:
           return item.id.startsWith("tt")
@@ -622,25 +582,38 @@ export default function MapleTVHub({ initialUrl, onNavigate }: { initialUrl: str
               onClick={() => setActiveMovie(null)}
               className="flex items-center gap-1.5 text-xs text-[#FF7E47] hover:text-[#FFB347] font-semibold transition cursor-pointer"
             >
-              <ArrowLeft className="h-4 w-4" /> Back to Cineby Library
+              <ArrowLeft className="h-4 w-4" /> {cloakMode ? "Back to Learning Vault" : "Back to Cineby Library"}
             </button>
             <div className="text-[10px] font-mono bg-red-950/40 border border-red-500/30 text-red-400 px-2.5 py-0.5 rounded-full flex items-center gap-1">
               <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse"></span>
-              Cineby Connection: Bypassing Filters
+              {cloakMode ? "Secure Workspace: Active Sync" : "Cineby Connection: Bypassing Filters"}
             </div>
           </div>
 
           {/* Iframe Stage */}
           <div className="relative w-full aspect-video bg-black rounded-2xl overflow-hidden border border-red-950/40 shadow-2xl flex flex-col shrink-0">
-            <iframe
-              id="cineby-player-iframe"
-              src={getCinebyEmbedUrl(activeMovie)}
-              className="flex-1 w-full h-full border-none"
-              allowFullScreen
-              allow="autoplay; encrypted-media"
-              sandbox={useSandbox ? "allow-forms allow-pointer-lock allow-popups allow-same-origin allow-scripts allow-top-navigation" : undefined}
-              title="Cineby Cinema Player"
-            />
+            {useSandbox ? (
+              <iframe
+                key="sandboxed-iframe"
+                id="cineby-player-iframe-sandboxed"
+                src={getCinebyEmbedUrl(activeMovie)}
+                className="flex-1 w-full h-full border-none"
+                allowFullScreen
+                allow="autoplay; encrypted-media"
+                sandbox="allow-forms allow-pointer-lock allow-popups allow-same-origin allow-scripts allow-top-navigation"
+                title="Cineby Cinema Player (Shield ON)"
+              />
+            ) : (
+              <iframe
+                key="raw-iframe"
+                id="cineby-player-iframe-raw"
+                src={getCinebyEmbedUrl(activeMovie)}
+                className="flex-1 w-full h-full border-none"
+                allowFullScreen
+                allow="autoplay; encrypted-media"
+                title="Cineby Cinema Player (Shield OFF)"
+              />
+            )}
           </div>
 
           {/* Sandbox & Frame-Bypass Popout Button */}
@@ -654,8 +627,7 @@ export default function MapleTVHub({ initialUrl, onNavigate }: { initialUrl: str
                 </p>
               </div>
             </div>
-            
-            <div className="flex items-center gap-2 shrink-0 flex-wrap">
+                       <div className="flex items-center gap-2 shrink-0 flex-wrap">
               <button
                 onClick={() => setUseSandbox(!useSandbox)}
                 className={`px-3 py-2 rounded-lg border text-[10px] font-mono font-extrabold uppercase tracking-wider transition flex items-center gap-1.5 cursor-pointer select-none ${
@@ -670,9 +642,18 @@ export default function MapleTVHub({ initialUrl, onNavigate }: { initialUrl: str
 
               <button
                 onClick={() => openAboutBlankPopout(getCinebyEmbedUrl(activeMovie), activeMovie.title || "MapleTV Playback Stream")}
-                className="px-4 py-2 bg-red-600 hover:bg-red-500 text-white font-mono font-extrabold text-[11px] uppercase tracking-wider rounded-lg flex items-center gap-1.5 transition shrink-0 active:scale-95 shadow-lg shadow-red-900/30 cursor-pointer"
+                className="px-3 py-2 bg-[#2D1409] hover:bg-[#3D1A0E] text-[#FF9E79] border border-[#3D1A0E] font-mono font-extrabold text-[11px] uppercase tracking-wider rounded-lg flex items-center gap-1.5 transition shrink-0 active:scale-95 cursor-pointer"
+                title="Loads stream inside a clean, un-sandboxed about:blank tab to trick simple extensions."
               >
-                <span>🍿</span> Popout Stream (about:blank)
+                <span>🥸</span> Tab Cloaker
+              </button>
+
+              <button
+                onClick={() => window.open(getCinebyEmbedUrl(activeMovie), "_blank")}
+                className="px-4 py-2 bg-red-600 hover:bg-red-500 text-white font-mono font-extrabold text-[11px] uppercase tracking-wider rounded-lg flex items-center gap-1.5 transition shrink-0 active:scale-95 shadow-lg shadow-red-900/30 cursor-pointer"
+                title="Bypasses all iframe restrictions & sandbox errors. Highly recommended if stream doesn't load!"
+              >
+                <span>🚀</span> Direct Tab Play (Bypasses Sandbox)
               </button>
             </div>
           </div>
@@ -681,15 +662,15 @@ export default function MapleTVHub({ initialUrl, onNavigate }: { initialUrl: str
           <div className="mt-4 bg-[#110603] border border-red-950/40 p-4 rounded-xl flex flex-col md:flex-row md:items-center justify-between gap-4 shrink-0">
             <div>
               <h4 className="text-xs font-extrabold text-white flex items-center gap-1.5">
-                <span>⚡</span> Cineby Server Bypass Routing
+                <span>⚡</span> {cloakMode ? "Alternative Resource Nodes" : "Cineby Server Bypass Routing"}
               </h4>
               <p className="text-[10px] text-[#D4A373]/70 mt-0.5">
-                Switch unblocked mirror servers if the current stream is laggy, blank, or blocked by firewalls.
+                {cloakMode ? "Switch educational sync servers if the current node has high latency or response timeouts." : "Switch unblocked mirror servers if the current stream is laggy, blank, or blocked by firewalls."}
               </p>
             </div>
 
             <div className="flex flex-wrap items-center gap-1.5">
-              {(["vidsrccc", "vidsrcsu", "vidsrcpm", "vidsrcnet", "vidsrcme", "vidlinkpro", "embedsu", "vidsrcto", "vidsrcxyz", "vidsrcpro", "lordflix", "flixer", "bingebox", "superembed"] as const).map((m) => (
+              {(["vidsrcsu", "vidsrcpm", "superembed"] as const).map((m) => (
                 <button
                   key={m}
                   onClick={() => setCinebyMirror(m)}
@@ -699,33 +680,11 @@ export default function MapleTVHub({ initialUrl, onNavigate }: { initialUrl: str
                       : "bg-[#1B0C06] text-[#D4A373] border-red-950/60 hover:bg-[#2D1409]"
                   }`}
                 >
-                  {m === "vidsrccc"
-                    ? "🎥 Server 1 (VidSrc.cc) ★"
-                    : m === "vidsrcsu"
-                    ? "⚡ Server 2 (VidSrc.su) ★"
+                  {m === "vidsrcsu"
+                    ? "🎥 Server 2 (VidSrc.su) ★"
                     : m === "vidsrcpm"
-                    ? "🛸 Server 3 (VidSrc.pm) ★"
-                    : m === "vidsrcnet"
-                    ? "🔗 Server 4 (VidSrc.net) ★"
-                    : m === "vidsrcme"
-                    ? "🚀 Server 5 (VidSrc.me)"
-                    : m === "vidlinkpro"
-                    ? "✨ Server 6 (VidLink)"
-                    : m === "embedsu"
-                    ? "💾 Server 7 (Embed.su)"
-                    : m === "vidsrcto"
-                    ? "⚡ Server 8 (VidSrc.to)"
-                    : m === "vidsrcxyz"
-                    ? "🎥 Server 9 (VidSrc.xyz)"
-                    : m === "vidsrcpro"
-                    ? "🛸 Server 10 (VidSrc.pro)"
-                    : m === "lordflix"
-                    ? "👑 Server 11 (LordFlix)"
-                    : m === "flixer"
-                    ? "🎬 Server 12 (Flixer)"
-                    : m === "bingebox"
-                    ? "🍿 Server 13 (BingeBox)"
-                    : "🔗 Server 14 (MultiEmbed)"}
+                    ? "⚡ Server 3 (VidSrc.pm) ★"
+                    : "🛸 Server 14 (MultiEmbed)"}
                 </button>
               ))}
             </div>
